@@ -10,12 +10,12 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .game-container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--polblauw); }
         
-        /* Het PD Speelveld */
+        /* Het PD Speelveld met de correcte bestandsnaam */
         #game-board { 
             position: relative; 
             width: 100%; 
             height: 600px; 
-            background-image: url('https://files.oaiusercontent.com/file-A1MvjV5qYV0C7v6RzYV7L5?se=2024-05-23T12%3A54%3A22Z&sp=r&sv=2021-08-06&sr=b&rscc=max-age%3D31536000%2C%20private%2C%20immutable&rscd=attachment%3B%20filename%3DQ2PVaangifte%2520les%25204plaatsdelict.png&sig=lDk1T3vF9v6v9v9v9v9v9v9v9v9v9v9v9v9v9v9v9v9%3D'); 
+            background-image: url('Q2PVaangifte les 4plaatsdelict.png'); 
             background-size: cover;
             background-position: center;
             border-radius: 8px; 
@@ -23,15 +23,14 @@
             border: 4px solid var(--polblauw); 
         }
 
-        /* Onzichtbare klikzones voor verdachten */
         .click-target { 
             position: absolute; 
             cursor: pointer; 
             background: rgba(255,255,255,0.01); 
-            border-radius: 50%;
-            transition: border 0.2s;
+            border-radius: 8px;
+            transition: background 0.2s;
         }
-        .click-target:hover { border: 2px dashed var(--goud); }
+        .click-target:hover { background: rgba(249, 212, 35, 0.2); border: 2px dashed var(--goud); }
         
         .signalement-box { background: var(--polblauw); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-family: 'Courier New', monospace; border-left: 10px solid var(--goud); }
         .screen { display: none; }
@@ -40,12 +39,12 @@
         .btn { padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; background: var(--polblauw); text-transform: uppercase; }
         .input-field { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #cbd5e0; border-radius: 4px; font-family: monospace; font-size: 1.1em; }
         
-        .status-badge { padding: 5px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-right: 5px; }
+        .status-badge { padding: 5px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-right: 5px; display: inline-block; margin-top: 5px; }
         .status-ok { background: var(--goed); color: white; }
         .status-error { background: var(--fout); color: white; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background: var(--polblauw); color: white; }
     </style>
 </head>
@@ -66,7 +65,7 @@
 
     <div id="round2-screen" class="screen">
         <h3>Dossieropmaak: Signalement</h3>
-        <p>Omschrijf de gemarkeerde persoon op het PD nauwkeurig volgens de PV-regels.</p>
+        <p>Omschrijf de gemarkeerde persoon op het PD nauwkeurig volgens de PV-regels (kleine letters, afsluiten met ; laatste item met .).</p>
         <div id="live-feedback"></div>
         <textarea id="my-signalement" class="input-field" rows="4" oninput="checkGrammar(this.value)" placeholder="man; lengte...; haar...; ogen...; kleding..."></textarea>
         <button class="btn" onclick="submitSignalement()" style="width:100%;">SIGNALEMENT VERZENDEN</button>
@@ -101,12 +100,12 @@
 
     let playerName = "";
     
-    // Definieer de personen op de afbeelding (coördinaten schatten op basis van de PD foto)
+    // De coördinaten zijn afgestemd op de personen op de foto
     const targets = [
-        {id: 0, x: 12, y: 35, w: 8, h: 40, desc: "man; ca. 185cm; kort bruin haar; oranje hoodie; zwarte broek; zwarte sneakers."},
-        {id: 1, x: 65, y: 38, w: 10, h: 45, desc: "vrouw; ca. 170cm; lang rood haar; zwarte leren jas; witte blouse; zwarte broek; handtas."},
-        {id: 2, x: 88, y: 38, w: 10, h: 50, desc: "man; ca. 180cm; grijs haar; grijs pak; witte overhemd; blauwe das; telefoon aan oor."},
-        {id: 3, x: 35, y: 40, w: 8, h: 30, desc: "man; ca. 175cm; bruin haar; donkerblauwe jas; spijkerbroek; camera om nek."}
+        {id: 0, x: 7, y: 38, w: 9, h: 42, desc: "man; ca. 185cm; kort opgeschoren haar; oranje hoodie; zwarte broek; zwarte sneakers."},
+        {id: 1, x: 62, y: 36, w: 9, h: 44, desc: "vrouw; ca. 170cm; lang rood haar; zwart jasje; wit shirt met stippen; zwarte broek; beige handtas."},
+        {id: 2, x: 84, y: 32, w: 10, h: 58, desc: "man; ca. 180cm; grijs kort haar; grijs kostuum; blauwe das; zwarte schoenen; telefoon in rechterhand."},
+        {id: 3, x: 31, y: 39, w: 8, h: 41, desc: "man; ca. 175cm; bruin haar; donkerblauwe jas; spijkerbroek; fototoestel voor de borst."}
     ];
 
     function joinGame() {
@@ -118,10 +117,15 @@
 
     function checkGrammar(val) {
         let fb = "";
-        if (/[A-Z]/.test(val)) fb += '<span class="status-badge status-error">❌ GEEN HOOFDLETTERS</span>';
-        if (val.length > 5 && !val.includes(';')) fb += '<span class="status-badge status-error">❌ GEBRUIK ;</span>';
-        if (val.length > 5 && !val.endsWith('.')) fb += '<span class="status-badge status-error">❌ EINDIG MET .</span>';
-        if (fb === "" && val.length > 5) fb = '<span class="status-badge status-goed">✅ GRAMMATICA CORRECT</span>';
+        const hasUpper = /[A-Z]/.test(val);
+        const hasSemicolon = val.includes(';');
+        const endsWithDot = val.endsWith('.');
+
+        if (hasUpper) fb += '<span class="status-badge status-error">❌ GEEN HOOFDLETTERS</span>';
+        if (val.length > 3 && !hasSemicolon) fb += '<span class="status-badge status-error">❌ GEBRUIK ;</span>';
+        if (val.length > 10 && !endsWithDot) fb += '<span class="status-badge status-error">❌ EINDIG MET .</span>';
+        if (fb === "" && val.length > 5 && endsWithDot) fb = '<span class="status-badge status-goed">✅ GRAMMATICA CORRECT</span>';
+        
         document.getElementById('live-feedback').innerHTML = fb;
     }
 
@@ -144,7 +148,8 @@
             renderTargets(state.targetIdx);
         } else if(state.mode === 'write') {
             showScreen('round2-screen');
-            // We laten de foto staan maar focus op schrijven
+            document.getElementById('my-signalement').value = "";
+            document.getElementById('live-feedback').innerHTML = "";
         }
     });
 
@@ -162,6 +167,8 @@
                 if(i === targetIdx) {
                     alert("Verdachte herkend!");
                     db.ref('recherche/players/' + playerName + '/score').transaction(s => (s||0) + 1);
+                } else {
+                    alert("Onschuldige burger!");
                 }
             };
             board.appendChild(div);
@@ -170,15 +177,17 @@
 
     function submitSignalement() {
         const txt = document.getElementById('my-signalement').value;
+        if(!txt) return alert("Voer eerst een tekst in.");
         db.ref('recherche/players/' + playerName).update({ signalement: txt });
-        alert("Dossier bijgewerkt.");
+        alert("Signalement verzonden.");
     }
 
     db.ref('recherche/players').on('value', snap => {
         const table = document.getElementById('score-table');
         table.innerHTML = "";
         snap.forEach(p => {
-            table.innerHTML += `<tr><td>${p.key}</td><td>${p.val().score}</td><td>${p.val().signalement}</td></tr>`;
+            const data = p.val();
+            table.innerHTML += `<tr><td>${p.key}</td><td>${data.score}</td><td>${data.signalement || '-'}</td></tr>`;
         });
     });
 
@@ -187,7 +196,11 @@
         document.getElementById(id).classList.add('active');
     }
 
-    function resetGame() { db.ref('recherche').set(null).then(() => location.reload()); }
+    function resetGame() { 
+        if(confirm("Alle data wissen?")) {
+            db.ref('recherche').set(null).then(() => location.reload()); 
+        }
+    }
 </script>
 </body>
 </html>
