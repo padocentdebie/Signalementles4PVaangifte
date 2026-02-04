@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Politie Academie - Speeltuin Recherche PD</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        :root { --polblauw: #1d4e89; --goud: #f9d423; --bg: #f4f7f9; --fout: #e53e3e; --goed: #28a745; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .game-container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--polblauw); }
+        
+        /* Het PD Speelveld */
+        #game-board { 
+            position: relative; 
+            width: 100%; 
+            height: 600px; 
+            background-image: url('https://files.oaiusercontent.com/file-A1MvjV5qYV0C7v6RzYV7L5?se=2024-05-23T12%3A54%3A22Z&sp=r&sv=2021-08-06&sr=b&rscc=max-age%3D31536000%2C%20private%2C%20immutable&rscd=attachment%3B%20filename%3DQ2PVaangifte%2520les%25204plaatsdelict.png&sig=lDk1T3vF9v6v9v9v9v9v9v9v9v9v9v9v9v9v9v9v9v9%3D'); 
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px; 
+            overflow: hidden; 
+            border: 4px solid var(--polblauw); 
+        }
+
+        /* Onzichtbare klikzones voor verdachten */
+        .click-target { 
+            position: absolute; 
+            cursor: pointer; 
+            background: rgba(255,255,255,0.01); 
+            border-radius: 50%;
+            transition: border 0.2s;
+        }
+        .click-target:hover { border: 2px dashed var(--goud); }
+        
+        .signalement-box { background: var(--polblauw); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-family: 'Courier New', monospace; border-left: 10px solid var(--goud); }
+        .screen { display: none; }
+        .active { display: block; }
+        
+        .btn { padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; background: var(--polblauw); text-transform: uppercase; }
+        .input-field { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #cbd5e0; border-radius: 4px; font-family: monospace; font-size: 1.1em; }
+        
+        .status-badge { padding: 5px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-right: 5px; }
+        .status-ok { background: var(--goed); color: white; }
+        .status-error { background: var(--fout); color: white; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 10px; }
+        th { background: var(--polblauw); color: white; }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h2 style="color:var(--polblauw); text-align:center;">🕵️‍♂️ Speeltuin Recherche: Plaats Delict</h2>
+
+    <div id="login-screen" class="screen active">
+        <input type="text" id="player-name" placeholder="Naam Verbalisant" class="input-field" style="max-width:300px; display:block; margin: 20px auto;">
+        <button class="btn" onclick="joinGame()" style="display:block; margin: auto;">INCIDENT MELDEN</button>
+    </div>
+
+    <div id="round1-screen" class="screen">
+        <div class="signalement-box"><strong>SIGNALEMENT GEZOCHTE PERSOON:</strong><br><span id="current-task">Briefing...</span></div>
+        <div id="game-board"></div>
+    </div>
+
+    <div id="round2-screen" class="screen">
+        <h3>Dossieropmaak: Signalement</h3>
+        <p>Omschrijf de gemarkeerde persoon op het PD nauwkeurig volgens de PV-regels.</p>
+        <div id="live-feedback"></div>
+        <textarea id="my-signalement" class="input-field" rows="4" oninput="checkGrammar(this.value)" placeholder="man; lengte...; haar...; ogen...; kleding..."></textarea>
+        <button class="btn" onclick="submitSignalement()" style="width:100%;">SIGNALEMENT VERZENDEN</button>
+    </div>
+
+    <div style="margin-top:40px; border-top: 2px solid #ddd; padding-top: 20px;">
+        <h4>Live Dossier Overzicht</h4>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <button class="btn" style="background:var(--goed);" onclick="startRound1()">Ronde 1: Zoeken</button>
+            <button class="btn" style="background:var(--goud); color:black;" onclick="startRound2()">Ronde 2: Schrijven</button>
+            <button class="btn" style="background:var(--fout);" onclick="resetGame()">Reset</button>
+        </div>
+        <table>
+            <thead><tr><th>Verbalisant</th><th>Punten</th><th>Ingezonden Tekst</th></tr></thead>
+            <tbody id="score-table"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOo2LzR1IBnsiBR2SCwPJABtaRv0tpKQ4",
+        authDomain: "speeltuin-recherche.firebaseapp.com",
+        databaseURL: "https://speeltuin-recherche-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "speeltuin-recherche",
+        storageBucket: "speeltuin-recherche.firebasestorage.app",
+        messagingSenderId: "499912834123",
+        appId: "1:499912834123:web:3c84cbf4d5eb13131961ce"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let playerName = "";
+    
+    // Definieer de personen op de afbeelding (coördinaten schatten op basis van de PD foto)
+    const targets = [
+        {id: 0, x: 12, y: 35, w: 8, h: 40, desc: "man; ca. 185cm; kort bruin haar; oranje hoodie; zwarte broek; zwarte sneakers."},
+        {id: 1, x: 65, y: 38, w: 10, h: 45, desc: "vrouw; ca. 170cm; lang rood haar; zwarte leren jas; witte blouse; zwarte broek; handtas."},
+        {id: 2, x: 88, y: 38, w: 10, h: 50, desc: "man; ca. 180cm; grijs haar; grijs pak; witte overhemd; blauwe das; telefoon aan oor."},
+        {id: 3, x: 35, y: 40, w: 8, h: 30, desc: "man; ca. 175cm; bruin haar; donkerblauwe jas; spijkerbroek; camera om nek."}
+    ];
+
+    function joinGame() {
+        playerName = document.getElementById('player-name').value.trim();
+        if(!playerName) return;
+        db.ref('recherche/players/' + playerName).set({score: 0, signalement: ""});
+        showScreen('round1-screen');
+    }
+
+    function checkGrammar(val) {
+        let fb = "";
+        if (/[A-Z]/.test(val)) fb += '<span class="status-badge status-error">❌ GEEN HOOFDLETTERS</span>';
+        if (val.length > 5 && !val.includes(';')) fb += '<span class="status-badge status-error">❌ GEBRUIK ;</span>';
+        if (val.length > 5 && !val.endsWith('.')) fb += '<span class="status-badge status-error">❌ EINDIG MET .</span>';
+        if (fb === "" && val.length > 5) fb = '<span class="status-badge status-goed">✅ GRAMMATICA CORRECT</span>';
+        document.getElementById('live-feedback').innerHTML = fb;
+    }
+
+    function startRound1() {
+        const idx = Math.floor(Math.random() * targets.length);
+        db.ref('recherche/state').set({ mode: 'search', targetIdx: idx, desc: targets[idx].desc });
+    }
+
+    function startRound2() {
+        const idx = Math.floor(Math.random() * targets.length);
+        db.ref('recherche/state').set({ mode: 'write', targetIdx: idx });
+    }
+
+    db.ref('recherche/state').on('value', snap => {
+        const state = snap.val();
+        if(!state) return;
+        if(state.mode === 'search') {
+            showScreen('round1-screen');
+            document.getElementById('current-task').innerText = state.desc;
+            renderTargets(state.targetIdx);
+        } else if(state.mode === 'write') {
+            showScreen('round2-screen');
+            // We laten de foto staan maar focus op schrijven
+        }
+    });
+
+    function renderTargets(targetIdx) {
+        const board = document.getElementById('game-board');
+        board.innerHTML = "";
+        targets.forEach((t, i) => {
+            const div = document.createElement('div');
+            div.className = "click-target";
+            div.style.left = t.x + "%";
+            div.style.top = t.y + "%";
+            div.style.width = t.w + "%";
+            div.style.height = t.h + "%";
+            div.onclick = () => {
+                if(i === targetIdx) {
+                    alert("Verdachte herkend!");
+                    db.ref('recherche/players/' + playerName + '/score').transaction(s => (s||0) + 1);
+                }
+            };
+            board.appendChild(div);
+        });
+    }
+
+    function submitSignalement() {
+        const txt = document.getElementById('my-signalement').value;
+        db.ref('recherche/players/' + playerName).update({ signalement: txt });
+        alert("Dossier bijgewerkt.");
+    }
+
+    db.ref('recherche/players').on('value', snap => {
+        const table = document.getElementById('score-table');
+        table.innerHTML = "";
+        snap.forEach(p => {
+            table.innerHTML += `<tr><td>${p.key}</td><td>${p.val().score}</td><td>${p.val().signalement}</td></tr>`;
+        });
+    });
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function resetGame() { db.ref('recherche').set(null).then(() => location.reload()); }
+</script>
+</body>
+</html>
