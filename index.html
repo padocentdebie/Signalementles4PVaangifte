@@ -2,98 +2,106 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Politie Academie - Dossier Training</title>
+    <title>Recherche Training: Signalementsbeheer</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
     <style>
-        :root { --polblauw: #1d4e89; --goud: #f9d423; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 8px solid var(--polblauw); }
+        :root { --polblauw: #1d4e89; --grijs: #334155; --bg: #f8fafc; --border: #cbd5e1; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--grijs); }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 5px solid var(--polblauw); }
         
-        /* De grote foto voor identificatie */
+        /* Visuele componenten */
         .foto-groot { 
             position: relative; width: 100%; height: 600px; 
-            background-color: #333;
-            /* We gebruiken encodeURIComponent voor de spaties */
             background-image: url('Q2PVaangifte%20les%204plaatsdelict.png'); 
-            background-size: cover; background-position: center; 
-            border: 3px solid var(--polblauw); border-radius: 8px;
+            background-size: cover; background-position: center; border: 1px solid var(--polblauw); 
         }
-        
-        /* De ingezoomde foto voor de schrijver */
         .foto-zoom { 
-            width: 250px; height: 350px; margin: 15px auto; 
-            background-color: #444;
-            background-image: url('Q2PVaangifte%20les%204plaatsdelict.png'); 
-            border: 5px solid var(--goud); border-radius: 8px;
+            width: 250px; height: 350px; margin: 15px auto; border: 2px solid var(--polblauw);
+            background-image: url('Q2PVaangifte%20les%204plaatsdelict.png'); background-repeat: no-repeat;
         }
         
-        .vakje { position: absolute; cursor: pointer; border: 2px solid transparent; z-index: 10; }
-        .vakje:hover { border-color: var(--goud); background: rgba(249, 212, 35, 0.3); }
+        .vakje { position: absolute; cursor: pointer; border: 1px solid transparent; z-index: 10; }
+        .vakje:hover { border-color: white; background: rgba(255, 255, 255, 0.2); }
 
+        /* Navigatie en Structuur */
         .scherm { display: none; }
         .actief { display: block; }
+        .nav-tabs { display: flex; gap: 2px; margin-bottom: 25px; background: #e2e8f0; padding: 5px; border-radius: 4px; }
+        .nav-btn { flex: 1; padding: 12px; cursor: pointer; border: none; background: transparent; font-size: 14px; font-weight: 600; text-transform: uppercase; color: var(--grijs); }
+        .nav-btn.active { background: white; color: var(--polblauw); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
-        button { padding: 12px 20px; cursor: pointer; background: var(--polblauw); color: white; border: none; border-radius: 4px; font-weight: bold; }
-        button:hover { background: #153a66; }
+        .instructie-veld { background: #f1f5f9; padding: 20px; border-radius: 4px; border-left: 4px solid var(--polblauw); margin-bottom: 20px; line-height: 1.6; }
+        .timer-veld { font-family: monospace; font-size: 20px; font-weight: bold; color: var(--polblauw); text-align: right; margin-bottom: 10px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background: #f8f9fa; color: var(--polblauw); }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-family: inherit; }
+        button.action-btn { padding: 12px 24px; cursor: pointer; background: var(--polblauw); color: white; border: none; border-radius: 4px; font-weight: bold; width: 100%; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 14px; }
+        th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
+        th { background: #f8fafc; text-transform: uppercase; letter-spacing: 0.05em; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align:center; color:var(--polblauw);">🕵️‍♂️ PV-Training: Het Signalement</h2>
+    <div id="login-sectie" style="text-align:center; padding: 40px 0;">
+        <h3 style="margin-top:0;">Autorisatie Vereist</h3>
+        <p>Voer uw achternaam en voorletters in voor toegang tot het systeem.</p>
+        <input type="text" id="speler-naam" placeholder="Naam Verbalisant" style="max-width:300px; text-align:center;">
+        <br>
+        <button onclick="inloggen()" class="action-btn" style="max-width:300px;">Systeem Toegang</button>
+    </div>
 
-    <div id="scherm-login" class="scherm actief">
-        <div style="text-align:center; padding: 50px 0;">
-            <h3>Welkom Verbalisant</h3>
-            <p>Vul uw naam in om het dossier te openen:</p>
-            <input type="text" id="naam-input" placeholder="Uw volledige naam" style="max-width: 300px;">
-            <br><br>
-            <button onclick="starten()">Sessie Starten</button>
+    <div id="hoofd-menu" style="display:none;">
+        <div class="nav-tabs">
+            <button id="btn-d1" class="nav-btn active" onclick="switchDeel(1)">Fase 1: Herkenningstraining</button>
+            <button id="btn-d2" class="nav-btn" onclick="switchDeel(2)">Fase 2: Dossieropbouw</button>
+        </div>
+
+        <div id="scherm-deel1" class="scherm actief">
+            <div id="d1-start">
+                <div class="instructie-veld">
+                    <strong>Protocol Fase 1:</strong> Er wordt een extern signalement gegenereerd. Identificeer de betreffende persoon op de plaats delict binnen een zo kort mogelijke tijd.
+                </div>
+                <button onclick="startDeel1()" class="action-btn">Start Identificatieprocedure</button>
+            </div>
+            <div id="d1-spel" style="display:none;">
+                <div class="timer-veld" id="d1-timer">0.00s</div>
+                <div class="instructie-veld" id="d1-opdracht"></div>
+                <div class="foto-groot" id="pd-foto-d1"></div>
+            </div>
+        </div>
+
+        <div id="scherm-deel2" class="scherm">
+            <div class="instructie-veld">
+                <strong>Protocol Fase 2:</strong> Stel een signalement op van de geselecteerde persoon. Gebruik de vastgestelde indeling: Vaste kenmerken (fysiek) en Veranderlijke kenmerken (kleding/accessoires).
+            </div>
+            <div id="zoom-box" class="foto-zoom"></div>
+            <textarea id="d2-tekst" placeholder="Vaste kenmerken: ...
+Veranderlijke kenmerken: ..."></textarea>
+            <button onclick="opslaanDeel2()" class="action-btn">Verstuur naar Live Dossier</button>
+            
+            <table id="dossier-tabel">
+                <thead>
+                    <tr><th>Verbalisant</th><th>Signalement</th><th>Validatie</th></tr>
+                </thead>
+                <tbody id="dossier-lijst"></tbody>
+            </table>
+        </div>
+
+        <div id="scherm-check-collega" class="scherm">
+            <button onclick="switchDeel(2)" style="background:#64748b; margin-bottom:10px;" class="action-btn">Terug naar Dossieroverzicht</button>
+            <div class="instructie-veld">
+                <strong>Validatie Signalement van: <span id="collega-naam"></span></strong><br>
+                <div id="collega-tekst" style="margin-top:10px; font-style: italic;"></div>
+            </div>
+            <div class="foto-groot" id="pd-foto-check"></div>
         </div>
     </div>
-
-    <div id="scherm-schrijven" class="scherm">
-        <h3>Stap 1: Omschrijf de persoon</h3>
-        <p>Maak een nauwkeurig signalement van de persoon in het gouden kader:</p>
-        <div id="zoom-box" class="foto-zoom"></div>
-        <textarea id="tekst-veld" placeholder="man; ca. 1.80m; kort donker haar; ..."></textarea>
-        <button onclick="opslaan()" style="width:100%;">Opslaan in Live Dossier</button>
-    </div>
-
-    <div id="scherm-zoeken" class="scherm">
-        <button onclick="switchScherm('scherm-schrijven')" style="background:#666; margin-bottom:10px;">⬅ Terug naar lijst</button>
-        <div style="background:#fff3cd; padding:15px; border-radius:8px; margin-bottom:15px; border-left: 5px solid var(--goud);">
-            <strong>Signalement van <span id="collega-naam">...</span>:</strong><br>
-            <i id="zoek-tekst"></i>
-        </div>
-        <div class="foto-groot" id="pd-foto"></div>
-    </div>
-
-    <hr style="margin:40px 0; border:0; border-top: 1px solid #eee;">
-
-    <h4>📋 Live Dossier Overzicht (Meldkamer)</h4>
-    <table id="dossier-tabel">
-        <thead>
-            <tr>
-                <th>Verbalisant</th>
-                <th>Ingezonden Signalement</th>
-                <th>Check</th>
-            </tr>
-        </thead>
-        <tbody id="tabel-inhoud">
-            </tbody>
-    </table>
 </div>
 
 <script>
-    // Jouw Firebase Configuratie
     const firebaseConfig = {
         apiKey: "AIzaSyBOo2LzR1IBnsiBR2SCwPJABtaRv0tpKQ4",
         authDomain: "speeltuin-recherche.firebaseapp.com",
@@ -103,102 +111,102 @@
         messagingSenderId: "499912834123",
         appId: "1:499912834123:web:3c84cbf4d5eb13131961ce"
     };
-
-    // Firebase Initialiseren
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let mijnNaam = "";
-    let mijnTargetIndex = 0;
+    let spelerNaam = "";
+    let d1StartTime, d1Interval, d1CorrectId;
+    let d2TargetIndex = 0;
 
-    // Coördinaten van de 10 personen
     const personen = [
-        {x: 7, y: 38, w: 9, h: 42, zPos: "8% 45%", zSize: "1000%"},   
-        {x: 62, y: 36, w: 9, h: 44, zPos: "65% 42%", zSize: "900%"},   
-        {x: 84, y: 32, w: 10, h: 58, zPos: "93% 45%", zSize: "800%"},  
-        {x: 31, y: 39, w: 8, h: 41, zPos: "34% 45%", zSize: "1000%"},  
-        {x: 0, y: 33, w: 7, h: 50, zPos: "0% 45%", zSize: "900%"},    
-        {x: 21, y: 37, w: 8, h: 45, zPos: "22% 45%", zSize: "950%"},   
-        {x: 76, y: 38, w: 8, h: 45, zPos: "79% 45%", zSize: "950%"},   
-        {x: 30, y: 56, w: 18, h: 40, zPos: "38% 75%", zSize: "700%"},  
-        {x: 50, y: 56, w: 18, h: 40, zPos: "60% 75%", zSize: "700%"},  
-        {x: 45, y: 40, w: 7, h: 30, zPos: "48% 48%", zSize: "1100%"}   
+        {id: 0, x: 7, y: 38, w: 9, h: 42, zPos: "8% 45%", zSize: "1000%", vast: "Man; ca. 1.85m; atletisch; donker haar; donkere ogen.", veranderlijk: "Oranje hoodie; baggy model; spijkerbroek."},
+        {id: 1, x: 62, y: 36, w: 9, h: 44, zPos: "65% 42%", zSize: "900%", vast: "Vrouw; ca. 1.70m; slank; rood lang haar; lichte ogen.", veranderlijk: "Wit overhemd; zwart lederlook jack; handtas."},
+        {id: 2, x: 84, y: 32, w: 10, h: 58, zPos: "93% 45%", zSize: "800%", vast: "Man; ca. 1.90m; fors; grijs kort haar.", veranderlijk: "Grijs kostuum (wol); zakelijke snit; telefoon gebruik."},
+        {id: 3, x: 31, y: 39, w: 8, h: 41, zPos: "34% 45%", zSize: "1000%", vast: "Man; ca. 1.75m; gemiddeld postuur; bruin haar.", veranderlijk: "Donkere jas; camera om de hals."},
+        {id: 7, x: 30, y: 56, w: 18, h: 40, zPos: "38% 75%", zSize: "700%", vast: "Onbekend; ca. 1.80m; postuur verborgen.", veranderlijk: "Wit Tyvek-pak; blauwe latex handschoenen; werkhouding."}
     ];
 
-    function starten() {
-        mijnNaam = document.getElementById('naam-input').value.trim();
-        if(!mijnNaam) return alert("Vul uw naam in om verder te gaan.");
-        
-        // Kies een willekeurige persoon voor deze student
-        mijnTargetIndex = Math.floor(Math.random() * personen.length);
-        
-        // Update de zoom-box
-        const zb = document.getElementById('zoom-box');
-        zb.style.backgroundPosition = personen[mijnTargetIndex].zPos;
-        zb.style.backgroundSize = personen[mijnTargetIndex].zSize;
-
-        switchScherm('scherm-schrijven');
+    function inloggen() {
+        spelerNaam = document.getElementById('speler-naam').value.trim();
+        if(!spelerNaam) return;
+        document.getElementById('login-sectie').style.display = "none";
+        document.getElementById('hoofd-menu').style.display = "block";
+        prepDeel2();
     }
 
-    function opslaan() {
-        const tekst = document.getElementById('tekst-veld').value;
-        if(tekst.length < 5) return alert("Schrijf a.u.b. een volledig signalement.");
-        
-        // Opslaan in Firebase
-        db.ref('les/studenten/' + mijnNaam).set({
-            tekst: tekst,
-            doel: mijnTargetIndex
+    function switchDeel(nr) {
+        document.querySelectorAll('.scherm').forEach(s => s.style.display = "none");
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        if(nr === 1) { document.getElementById('scherm-deel1').style.display = "block"; document.getElementById('btn-d1').classList.add('active'); clearInterval(d1Interval); }
+        if(nr === 2) { document.getElementById('scherm-deel2').style.display = "block"; document.getElementById('btn-d2').classList.add('active'); }
+    }
+
+    function startDeel1() {
+        document.getElementById('d1-start').style.display = "none";
+        document.getElementById('d1-spel').style.display = "block";
+        const p = personen[Math.floor(Math.random() * personen.length)];
+        d1CorrectId = p.id;
+        document.getElementById('d1-opdracht').innerHTML = `<strong>Vaste kenmerken:</strong> ${p.vast}<br><strong>Veranderlijke kenmerken:</strong> ${p.veranderlijk}`;
+        tekenGebieden('pd-foto-d1', (id) => {
+            if(id === d1CorrectId) {
+                clearInterval(d1Interval);
+                alert("Identificatie voltooid. Tijd: " + document.getElementById('d1-timer').innerText);
+                document.getElementById('d1-start').style.display = "block";
+                document.getElementById('d1-spel').style.display = "none";
+            }
         });
-        alert("Uw signalement is opgeslagen.");
+        d1StartTime = Date.now();
+        d1Interval = setInterval(() => {
+            document.getElementById('d1-timer').innerText = ((Date.now() - d1StartTime)/1000).toFixed(2) + "s";
+        }, 50);
     }
 
-    function bekijkCollega(naam, tekst, doelIndex) {
-        if(naam === mijnNaam) return alert("U kunt uw eigen werk niet controleren.");
-        
+    function prepDeel2() {
+        d2TargetIndex = Math.floor(Math.random() * personen.length);
+        const zb = document.getElementById('zoom-box');
+        zb.style.backgroundPosition = personen[d2TargetIndex].zPos;
+        zb.style.backgroundSize = personen[d2TargetIndex].zSize;
+    }
+
+    function opslaanDeel2() {
+        const txt = document.getElementById('d2-tekst').value;
+        if(txt.length < 10) return;
+        db.ref('les/studenten/' + spelerNaam).set({ tekst: txt, doel: d2TargetIndex });
+        alert("Signalement geregistreerd.");
+    }
+
+    function bekijkCollega(naam, tekst, doel) {
+        document.querySelectorAll('.scherm').forEach(s => s.style.display = "none");
+        document.getElementById('scherm-check-collega').style.display = "block";
         document.getElementById('collega-naam').innerText = naam;
-        document.getElementById('zoek-tekst').innerText = tekst;
-        switchScherm('scherm-zoeken');
-        
-        // Teken de klikbare gebieden op de foto
-        const pd = document.getElementById('pd-foto');
+        document.getElementById('collega-tekst').innerText = tekst;
+        tekenGebieden('pd-foto-check', (id) => {
+            if(id === personen[doel].id) { alert("Validatie succesvol."); switchDeel(2); }
+            else { alert("Identificatie onjuist."); }
+        });
+    }
+
+    function tekenGebieden(cid, cb) {
+        const pd = document.getElementById(cid);
         pd.innerHTML = "";
-        personen.forEach((p, i) => {
+        personen.forEach(p => {
             const v = document.createElement('div');
             v.className = "vakje";
             v.style.left = p.x + "%"; v.style.top = p.y + "%";
             v.style.width = p.w + "%"; v.style.height = p.h + "%";
-            v.onclick = () => {
-                if(i === doelIndex) {
-                    alert("GOED! U heeft de juiste persoon geïdentificeerd.");
-                    switchScherm('scherm-schrijven');
-                } else {
-                    alert("ONJUIST. Deze persoon voldoet niet aan de omschrijving.");
-                }
-            };
+            v.onclick = () => cb(p.id);
             pd.appendChild(v);
         });
     }
 
-    // Luisteren naar wijzigingen in het dossier
     db.ref('les/studenten').on('value', snap => {
-        const lijst = document.getElementById('tabel-inhoud');
+        const lijst = document.getElementById('dossier-lijst');
         lijst.innerHTML = "";
         snap.forEach(s => {
-            const data = s.val();
-            lijst.innerHTML += `
-                <tr>
-                    <td><strong>${s.key}</strong></td>
-                    <td>${data.tekst}</td>
-                    <td><button onclick="bekijkCollega('${s.key}', '${data.tekst}', ${data.doel})">Identificeer</button></td>
-                </tr>`;
+            const d = s.val();
+            lijst.innerHTML += `<tr><td>${s.key}</td><td>${d.tekst}</td><td><button onclick="bekijkCollega('${s.key}', '${d.tekst}', ${d.doel})">Valideer</button></td></tr>`;
         });
     });
-
-    function switchScherm(id) {
-        document.querySelectorAll('.scherm').forEach(s => s.classList.remove('actief'));
-        document.getElementById(id).classList.add('actief');
-    }
 </script>
-
 </body>
 </html>
