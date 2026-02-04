@@ -2,106 +2,98 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Politie Academie - Dossier Training 10 Personen</title>
+    <title>Politie Academie - Dossier Training</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
         :root { --polblauw: #1d4e89; --goud: #f9d423; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 8px solid var(--polblauw); }
         
+        /* De grote foto voor identificatie */
         .foto-groot { 
-            position: relative; 
-            width: 100%; 
-            height: 650px; 
-            background-image: url('Q2PVaangifte les 4plaatsdelict.png'); 
-            background-size: cover; 
-            background-position: center; 
-            border: 3px solid var(--polblauw); 
-            border-radius: 8px; 
+            position: relative; width: 100%; height: 600px; 
+            background-color: #333;
+            /* We gebruiken encodeURIComponent voor de spaties */
+            background-image: url('Q2PVaangifte%20les%204plaatsdelict.png'); 
+            background-size: cover; background-position: center; 
+            border: 3px solid var(--polblauw); border-radius: 8px;
         }
         
+        /* De ingezoomde foto voor de schrijver */
         .foto-zoom { 
-            width: 250px; 
-            height: 350px; 
-            margin: 15px auto; 
-            border: 4px solid var(--goud); 
-            border-radius: 8px; 
-            background-image: url('Q2PVaangifte les 4plaatsdelict.png'); 
-            background-repeat: no-repeat;
+            width: 250px; height: 350px; margin: 15px auto; 
+            background-color: #444;
+            background-image: url('Q2PVaangifte%20les%204plaatsdelict.png'); 
+            border: 5px solid var(--goud); border-radius: 8px;
         }
         
-        .vakje { position: absolute; cursor: pointer; border: 2px solid transparent; border-radius: 4px; z-index: 10; }
-        .vakje:hover { border-color: var(--goud); background: rgba(249, 212, 35, 0.2); }
+        .vakje { position: absolute; cursor: pointer; border: 2px solid transparent; z-index: 10; }
+        .vakje:hover { border-color: var(--goud); background: rgba(249, 212, 35, 0.3); }
 
         .scherm { display: none; }
         .actief { display: block; }
         
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        button { padding: 12px 20px; cursor: pointer; background: var(--polblauw); color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #153a66; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background: var(--polblauw); color: white; }
-        tr:nth-child(even) { background: #fafafa; }
-        
-        button { padding: 12px 20px; cursor: pointer; background: var(--polblauw); color: white; border: none; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
-        button:hover { opacity: 0.9; }
-        
-        textarea { width: 100%; height: 100px; margin: 10px 0; border: 2px solid #cbd5e0; padding: 10px; box-sizing: border-box; font-size: 16px; border-radius: 4px; }
-        .instructie-box { background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 5px solid var(--goud); margin-bottom: 15px; }
+        th { background: #f8f9fa; color: var(--polblauw); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div style="text-align:center;">
-        <h2 style="color:var(--polblauw);">🕵️‍♂️ Recherche Training: Het Signalement</h2>
-    </div>
+    <h2 style="text-align:center; color:var(--polblauw);">🕵️‍♂️ PV-Training: Het Signalement</h2>
 
     <div id="scherm-login" class="scherm actief">
-        <div style="text-align:center; padding: 40px 0;">
-            <p>Voer uw naam in om toegang te krijgen tot het dossier:</p>
-            <input type="text" id="naam" placeholder="Naam Verbalisant" style="padding:12px; width: 250px; border: 2px solid #ccc; border-radius: 4px;">
+        <div style="text-align:center; padding: 50px 0;">
+            <h3>Welkom Verbalisant</h3>
+            <p>Vul uw naam in om het dossier te openen:</p>
+            <input type="text" id="naam-input" placeholder="Uw volledige naam" style="max-width: 300px;">
             <br><br>
             <button onclick="starten()">Sessie Starten</button>
         </div>
     </div>
 
     <div id="scherm-schrijven" class="scherm">
-        <h3>Stap 1: Observatie & PV-opmaak</h3>
-        <p>Stel een signalement op van de onderstaande persoon (gebruik kleine letters en puntkomma's):</p>
+        <h3>Stap 1: Omschrijf de persoon</h3>
+        <p>Maak een nauwkeurig signalement van de persoon in het gouden kader:</p>
         <div id="zoom-box" class="foto-zoom"></div>
-        <textarea id="tekst-veld" placeholder="man; ca. 1.80m; oranje hoodie; zwarte broek."></textarea>
-        <button onclick="opslaan()" style="width:100%;">Signalement Opslaan</button>
+        <textarea id="tekst-veld" placeholder="man; ca. 1.80m; kort donker haar; ..."></textarea>
+        <button onclick="opslaan()" style="width:100%;">Opslaan in Live Dossier</button>
     </div>
 
     <div id="scherm-zoeken" class="scherm">
-        <button onclick="terug()" style="background:#666; margin-bottom:10px;">⬅ Terug naar overzicht</button>
-        <div class="instructie-box">
-            <strong>Identificeer de persoon van collega <span id="collega-naam">...</span>:</strong><br>
+        <button onclick="switchScherm('scherm-schrijven')" style="background:#666; margin-bottom:10px;">⬅ Terug naar lijst</button>
+        <div style="background:#fff3cd; padding:15px; border-radius:8px; margin-bottom:15px; border-left: 5px solid var(--goud);">
+            <strong>Signalement van <span id="collega-naam">...</span>:</strong><br>
             <i id="zoek-tekst"></i>
         </div>
         <div class="foto-groot" id="pd-foto"></div>
     </div>
 
-    <hr style="margin:40px 0; border: 0; border-top: 1px solid #ccc;">
+    <hr style="margin:40px 0; border:0; border-top: 1px solid #eee;">
 
     <h4>📋 Live Dossier Overzicht (Meldkamer)</h4>
-    <table>
+    <table id="dossier-tabel">
         <thead>
             <tr>
                 <th>Verbalisant</th>
-                <th>Signalement</th>
-                <th>Actie</th>
+                <th>Ingezonden Signalement</th>
+                <th>Check</th>
             </tr>
         </thead>
-        <tbody id="tabel-inhoud"></tbody>
+        <tbody id="tabel-inhoud">
+            </tbody>
     </table>
-    <br>
-    <button onclick="leegmaken()" style="background:#e53e3e; font-size: 10px;">Reset Database (Docent)</button>
 </div>
 
 <script>
-    // Jouw specifieke Firebase configuratie
+    // Jouw Firebase Configuratie
     const firebaseConfig = {
         apiKey: "AIzaSyBOo2LzR1IBnsiBR2SCwPJABtaRv0tpKQ4",
         authDomain: "speeltuin-recherche.firebaseapp.com",
@@ -112,88 +104,93 @@
         appId: "1:499912834123:web:3c84cbf4d5eb13131961ce"
     };
 
-    // Initialiseer Firebase (Compat mode)
+    // Firebase Initialiseren
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let mijnNaam = "";
-    let mijnPersoonIndex = 0;
+    let mijnTargetIndex = 0;
 
+    // Coördinaten van de 10 personen
     const personen = [
-        {id: 0, x: 7, y: 38, w: 9, h: 42, zPos: "8% 45%", zSize: "1000%"},   
-        {id: 1, x: 62, y: 36, w: 9, h: 44, zPos: "65% 42%", zSize: "900%"},   
-        {id: 2, x: 84, y: 32, w: 10, h: 58, zPos: "93% 45%", zSize: "800%"},  
-        {id: 3, x: 31, y: 39, w: 8, h: 41, zPos: "34% 45%", zSize: "1000%"},  
-        {id: 4, x: 0, y: 33, w: 7, h: 50, zPos: "0% 45%", zSize: "900%"},    
-        {id: 5, x: 21, y: 37, w: 8, h: 45, zPos: "22% 45%", zSize: "950%"},   
-        {id: 6, x: 76, y: 38, w: 8, h: 45, zPos: "79% 45%", zSize: "950%"},   
-        {id: 7, x: 30, y: 56, w: 18, h: 40, zPos: "38% 75%", zSize: "700%"},  
-        {id: 8, x: 50, y: 56, w: 18, h: 40, zPos: "60% 75%", zSize: "700%"},  
-        {id: 9, x: 45, y: 40, w: 7, h: 30, zPos: "48% 48%", zSize: "1100%"}   
+        {x: 7, y: 38, w: 9, h: 42, zPos: "8% 45%", zSize: "1000%"},   
+        {x: 62, y: 36, w: 9, h: 44, zPos: "65% 42%", zSize: "900%"},   
+        {x: 84, y: 32, w: 10, h: 58, zPos: "93% 45%", zSize: "800%"},  
+        {x: 31, y: 39, w: 8, h: 41, zPos: "34% 45%", zSize: "1000%"},  
+        {x: 0, y: 33, w: 7, h: 50, zPos: "0% 45%", zSize: "900%"},    
+        {x: 21, y: 37, w: 8, h: 45, zPos: "22% 45%", zSize: "950%"},   
+        {x: 76, y: 38, w: 8, h: 45, zPos: "79% 45%", zSize: "950%"},   
+        {x: 30, y: 56, w: 18, h: 40, zPos: "38% 75%", zSize: "700%"},  
+        {x: 50, y: 56, w: 18, h: 40, zPos: "60% 75%", zSize: "700%"},  
+        {x: 45, y: 40, w: 7, h: 30, zPos: "48% 48%", zSize: "1100%"}   
     ];
 
     function starten() {
-        mijnNaam = document.getElementById('naam').value.trim();
-        if(!mijnNaam) return alert("Voer uw naam in.");
+        mijnNaam = document.getElementById('naam-input').value.trim();
+        if(!mijnNaam) return alert("Vul uw naam in om verder te gaan.");
         
-        mijnPersoonIndex = Math.floor(Math.random() * personen.length);
+        // Kies een willekeurige persoon voor deze student
+        mijnTargetIndex = Math.floor(Math.random() * personen.length);
         
+        // Update de zoom-box
         const zb = document.getElementById('zoom-box');
-        zb.style.backgroundPosition = personen[mijnPersoonIndex].zPos;
-        zb.style.backgroundSize = personen[mijnPersoonIndex].zSize;
+        zb.style.backgroundPosition = personen[mijnTargetIndex].zPos;
+        zb.style.backgroundSize = personen[mijnTargetIndex].zSize;
 
         switchScherm('scherm-schrijven');
     }
 
     function opslaan() {
         const tekst = document.getElementById('tekst-veld').value;
-        if(tekst.length < 5) return alert("Omschrijving is te kort.");
+        if(tekst.length < 5) return alert("Schrijf a.u.b. een volledig signalement.");
         
+        // Opslaan in Firebase
         db.ref('les/studenten/' + mijnNaam).set({
             tekst: tekst,
-            doel: mijnPersoonIndex
+            doel: mijnTargetIndex
         });
-        alert("Signalement opgeslagen.");
+        alert("Uw signalement is opgeslagen.");
     }
 
-    function checkAnder(naam, tekst, doel) {
-        if(naam === mijnNaam) return alert("U kunt uw eigen dossier niet controleren.");
+    function bekijkCollega(naam, tekst, doelIndex) {
+        if(naam === mijnNaam) return alert("U kunt uw eigen werk niet controleren.");
+        
         document.getElementById('collega-naam').innerText = naam;
-        document.getElementById('zoek-tekst').innerText = `"${tekst}"`;
+        document.getElementById('zoek-tekst').innerText = tekst;
         switchScherm('scherm-zoeken');
-        tekenVakjes(doel);
-    }
-
-    function tekenVakjes(correctIndex) {
+        
+        // Teken de klikbare gebieden op de foto
         const pd = document.getElementById('pd-foto');
-        pd.innerHTML = ""; 
+        pd.innerHTML = "";
         personen.forEach((p, i) => {
             const v = document.createElement('div');
             v.className = "vakje";
             v.style.left = p.x + "%"; v.style.top = p.y + "%";
             v.style.width = p.w + "%"; v.style.height = p.h + "%";
             v.onclick = () => {
-                if(i === correctIndex) {
-                    alert("Correct! Identificatie geslaagd.");
+                if(i === doelIndex) {
+                    alert("GOED! U heeft de juiste persoon geïdentificeerd.");
                     switchScherm('scherm-schrijven');
                 } else {
-                    alert("Onjuist.");
+                    alert("ONJUIST. Deze persoon voldoet niet aan de omschrijving.");
                 }
             };
             pd.appendChild(v);
         });
     }
 
+    // Luisteren naar wijzigingen in het dossier
     db.ref('les/studenten').on('value', snap => {
         const lijst = document.getElementById('tabel-inhoud');
         lijst.innerHTML = "";
         snap.forEach(s => {
-            const d = s.val();
-            lijst.innerHTML += `<tr>
-                <td><strong>${s.key}</strong></td>
-                <td>${d.tekst}</td>
-                <td><button onclick="checkAnder('${s.key}', '${d.tekst}', ${d.doel})">Identificeer</button></td>
-            </tr>`;
+            const data = s.val();
+            lijst.innerHTML += `
+                <tr>
+                    <td><strong>${s.key}</strong></td>
+                    <td>${data.tekst}</td>
+                    <td><button onclick="bekijkCollega('${s.key}', '${data.tekst}', ${data.doel})">Identificeer</button></td>
+                </tr>`;
         });
     });
 
@@ -201,9 +198,7 @@
         document.querySelectorAll('.scherm').forEach(s => s.classList.remove('actief'));
         document.getElementById(id).classList.add('actief');
     }
-
-    function terug() { switchScherm('scherm-schrijven'); }
-    function leegmaken() { if(confirm("Database legen?")) db.ref('les').remove(); }
 </script>
+
 </body>
 </html>
