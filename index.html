@@ -10,19 +10,31 @@
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--grijs); }
         .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 5px solid var(--polblauw); }
         
-        .foto-groot { 
-            position: relative; width: 100%; height: 600px; 
-            background-image: url('https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg'); 
-            background-size: 100% 100%; background-repeat: no-repeat; border: 1px solid var(--polblauw); 
+        /* Foto container */
+        .foto-container { 
+            position: relative; 
+            width: 100%; 
+            height: 600px; 
+            border: 2px solid var(--polblauw); 
+            background: #eee;
+            overflow: hidden;
         }
+        .foto-img { 
+            width: 100%; 
+            height: 100%; 
+            display: block;
+            object-fit: fill; /* Zorgt dat de coördinaten kloppen */
+        }
+        
         .foto-zoom { 
             width: 100%; max-width: 300px; height: 400px; margin: 15px auto; border: 3px solid var(--polblauw);
-            background-image: url('https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg'); background-repeat: no-repeat;
+            background-image: url('https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg'); 
+            background-repeat: no-repeat;
             border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         
-        .vakje { position: absolute; cursor: pointer; border: 1px solid transparent; z-index: 10; }
-        .vakje:hover { border-color: white; background: rgba(255, 255, 255, 0.3); }
+        .vakje { position: absolute; cursor: pointer; border: 2px solid transparent; z-index: 10; }
+        .vakje:hover { border-color: yellow; background: rgba(255, 255, 0, 0.2); }
 
         .scherm { display: none; }
         .actief { display: block; }
@@ -30,68 +42,67 @@
         .nav-btn { flex: 1; padding: 12px; cursor: pointer; border: none; background: transparent; font-size: 14px; font-weight: 600; text-transform: uppercase; color: var(--grijs); }
         .nav-btn.active { background: white; color: var(--polblauw); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         
-        .instructie-veld { background: #f1f5f9; padding: 20px; border-radius: 4px; border-left: 4px solid var(--polblauw); margin-bottom: 20px; line-height: 1.6; }
-        .timer-veld { font-family: monospace; font-size: 24px; font-weight: bold; color: var(--polblauw); text-align: right; margin-bottom: 10px; }
+        .instructie-veld { background: #f1f5f9; padding: 20px; border-radius: 4px; border-left: 4px solid var(--polblauw); margin-bottom: 20px; }
+        .timer-veld { font-family: monospace; font-size: 24px; font-weight: bold; color: var(--polblauw); text-align: right; }
         
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-family: inherit; }
+        textarea { width: 100%; height: 120px; padding: 12px; border: 1px solid var(--border); border-radius: 4px; margin: 10px 0; }
         button.action-btn { padding: 12px 24px; cursor: pointer; background: var(--polblauw); color: white; border: none; border-radius: 4px; font-weight: bold; width: 100%; text-transform: uppercase; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; }
         th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
-        th { background: #f8fafc; color: var(--polblauw); }
-        .feedback-box { background: #fffbeb; border: 1px solid var(--gold); padding: 15px; margin-top: 10px; border-radius: 4px; white-space: pre-wrap; font-size: 1.1em; line-height: 1.4; }
+        .feedback-box { background: #fffbeb; border: 1px solid var(--gold); padding: 15px; margin: 10px 0; border-radius: 4px; white-space: pre-wrap; font-size: 1.1em; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="login-sectie" style="text-align:center; padding: 40px 0;">
+    <div id="login-sectie" style="text-align:center;">
         <h3>Recherche Informatie Systeem</h3>
-        <input type="text" id="speler-naam" placeholder="Naam Verbalisant" style="max-width:300px; text-align:center;">
-        <br>
-        <button onclick="inloggen()" class="action-btn" style="max-width:300px;">Systeem Toegang</button>
+        <input type="text" id="speler-naam" placeholder="Naam Verbalisant" style="padding:10px; width:250px;"><br><br>
+        <button onclick="inloggen()" class="action-btn" style="width:275px;">Systeem Toegang</button>
     </div>
 
     <div id="hoofd-menu" style="display:none;">
         <div class="nav-tabs">
-            <button id="btn-d1" class="nav-btn active" onclick="switchDeel(1)">Fase 1: Herkenning</button>
-            <button id="btn-d2" class="nav-btn" onclick="switchDeel(2)">Fase 2: Dossieropbouw</button>
+            <button id="btn-d1" class="nav-btn active" onclick="switchDeel(1)">Fase 1</button>
+            <button id="btn-d2" class="nav-btn" onclick="switchDeel(2)">Fase 2</button>
         </div>
 
         <div id="scherm-deel1" class="scherm actief">
             <div id="d1-start">
-                <div class="instructie-veld"><strong>Protocol Fase 1:</strong> Identificeer de juiste persoon op basis van het signalement.</div>
                 <button onclick="startDeel1()" class="action-btn">Start Identificatie</button>
             </div>
             <div id="d1-spel" style="display:none;">
                 <div class="timer-veld" id="d1-timer">0.00s</div>
                 <div id="d1-opdracht" class="feedback-box"></div>
-                <div class="foto-groot" id="pd-foto-d1"></div>
+                <div class="foto-container" id="pd-foto-d1">
+                    <img src="https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg" class="foto-img">
+                    <div id="vakjes-overlay-d1"></div>
+                </div>
             </div>
         </div>
 
         <div id="scherm-deel2" class="scherm">
-            <div class="instructie-veld"><strong>Protocol Fase 2:</strong> Noteer het signalement (kleine letters, puntkomma tussen items, eindig met punt).</div>
             <div id="zoom-box" class="foto-zoom"></div>
             <textarea id="d2-tekst" placeholder="man; atletisch postuur; ...;"></textarea>
-            <button onclick="opslaanDeel2()" class="action-btn">Verstuur naar Live Dossier</button>
+            <button onclick="opslaanDeel2()" class="action-btn">Verstuur Signalement</button>
             <table>
-                <thead><tr><th>Verbalisant</th><th>Signalement</th><th>Validatie</th></tr></thead>
+                <thead><tr><th>Naam</th><th>Signalement</th><th>Actie</th></tr></thead>
                 <tbody id="dossier-lijst"></tbody>
             </table>
         </div>
 
         <div id="scherm-check-collega" class="scherm">
-            <button onclick="switchDeel(2)" style="background:#64748b; margin-bottom:10px;" class="action-btn">Terug naar Dossier</button>
-            <div class="instructie-veld">
-                <strong>Validatie Signalement van: <span id="collega-naam"></span></strong>
-                <div id="collega-tekst" class="feedback-box"></div>
+            <button onclick="switchDeel(2)" class="action-btn" style="background:gray; margin-bottom:10px;">Terug</button>
+            <div id="collega-tekst" class="feedback-box"></div>
+            <div class="foto-container" id="pd-foto-check">
+                <img src="https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg" class="foto-img">
+                <div id="vakjes-overlay-check"></div>
             </div>
-            <div class="foto-groot" id="pd-foto-check"></div>
         </div>
-
-        <div style="margin-top:50px; text-align:center;">
-            <button onclick="wisDossier()" style="background:#ef4444; color:white; border:none; padding:8px 15px; cursor:pointer; border-radius:4px; font-size:12px;">WIS DOSSIER</button>
+        
+        <div style="text-align:center; margin-top:20px;">
+            <button onclick="wisDossier()" style="font-size:10px; color:red; background:none; border:none; cursor:pointer;">Wis Dossier</button>
         </div>
     </div>
 </div>
@@ -124,10 +135,11 @@
 
     function inloggen() {
         spelerNaam = document.getElementById('speler-naam').value.trim();
-        if(!spelerNaam) return;
-        document.getElementById('login-sectie').style.display = "none";
-        document.getElementById('hoofd-menu').style.display = "block";
-        prepDeel2();
+        if(spelerNaam) {
+            document.getElementById('login-sectie').style.display = "none";
+            document.getElementById('hoofd-menu').style.display = "block";
+            prepDeel2();
+        }
     }
 
     function switchDeel(nr) {
@@ -142,12 +154,10 @@
         document.getElementById('d1-spel').style.display = "block";
         const p = personen[Math.floor(Math.random() * personen.length)];
         d1CorrectId = p.id;
-        const vL = p.vast.split('; ').join(';<br>');
-        const rL = p.veranderlijk.split('; ').join(';<br>');
-        document.getElementById('d1-opdracht').innerHTML = `${vL}<br>${rL}`;
-        tekenGebieden('pd-foto-d1', (id) => {
-            if(id === d1CorrectId) { clearInterval(d1Interval); alert("identificatie succesvol!"); document.getElementById('d1-start').style.display = "block"; document.getElementById('d1-spel').style.display = "none"; }
-            else alert("negatief; onjuiste persoon.");
+        document.getElementById('d1-opdracht').innerHTML = `${p.vast.split('; ').join(';<br>')}<br>${p.veranderlijk.split('; ').join(';<br>')}`;
+        tekenGebieden('vakjes-overlay-d1', (id) => {
+            if(id === d1CorrectId) { clearInterval(d1Interval); alert("Goed!"); switchDeel(1); document.getElementById('d1-start').style.display = "block"; document.getElementById('d1-spel').style.display = "none"; }
+            else alert("Fout.");
         });
         d1StartTime = Date.now();
         d1Interval = setInterval(() => { document.getElementById('d1-timer').innerText = ((Date.now() - d1StartTime)/1000).toFixed(2) + "s"; }, 50);
@@ -163,35 +173,31 @@
 
     function opslaanDeel2() {
         const txt = document.getElementById('d2-tekst').value.trim();
-        if(txt.length < 5) return;
-        db.ref('les/studenten/' + spelerNaam).set({ tekst: txt, doel: d2TargetIndex });
-        alert("geregistreerd.");
-        prepDeel2();
+        if(txt) { db.ref('les/studenten/' + spelerNaam).set({ tekst: txt, doel: d2TargetIndex }); alert("Opgeslagen."); prepDeel2(); }
     }
 
     function bekijkCollega(naam, tekst, doel) {
         document.querySelectorAll('.scherm').forEach(s => s.style.display = "none");
         document.getElementById('scherm-check-collega').style.display = "block";
-        document.getElementById('collega-naam').innerText = naam;
-        document.getElementById('collega-tekst').innerHTML = tekst.split('; ').join(';<br>');
-        tekenGebieden('pd-foto-check', (id) => {
-            if(id === personen[doel].id) { alert("validatie succesvol."); switchDeel(2); }
-            else alert("onjuist.");
+        document.getElementById('collega-tekst').innerHTML = `<strong>Signalement van ${naam}:</strong><br>${tekst.split('; ').join(';<br>')}`;
+        tekenGebieden('vakjes-overlay-check', (id) => {
+            if(id === personen[doel].id) { alert("Correct!"); switchDeel(2); }
+            else alert("Fout.");
         });
     }
 
-    function wisDossier() { if(confirm("dossier wissen?")) db.ref('les/studenten').remove(); }
+    function wisDossier() { if(confirm("Dossier wissen?")) db.ref('les/studenten').remove(); }
 
-    function tekenGebieden(cid, cb) {
-        const pd = document.getElementById(cid);
-        pd.innerHTML = "";
+    function tekenGebieden(containerId, cb) {
+        const div = document.getElementById(containerId);
+        div.innerHTML = "";
         personen.forEach(p => {
             const v = document.createElement('div');
             v.className = "vakje";
             v.style.left = p.x + "%"; v.style.top = p.y + "%";
             v.style.width = p.w + "%"; v.style.height = p.h + "%";
             v.onclick = () => cb(p.id);
-            pd.appendChild(v);
+            div.appendChild(v);
         });
     }
 
@@ -200,7 +206,7 @@
         lijst.innerHTML = "";
         snap.forEach(s => {
             const d = s.val();
-            lijst.innerHTML += `<tr><td><strong>${s.key}</strong></td><td>${d.tekst}</td><td><button onclick="bekijkCollega('${s.key}', '${d.tekst}', ${d.doel})">VALIDEER</button></td></tr>`;
+            lijst.innerHTML += `<tr><td>${s.key}</td><td>${d.tekst.substring(0,30)}...</td><td><button onclick="bekijkCollega('${s.key}', '${d.tekst}', ${d.doel})">Valideer</button></td></tr>`;
         });
     });
 </script>
