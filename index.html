@@ -1,4 +1,114 @@
-// De aangepaste personen-database met het juiste format
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Recherche Training: Signalementsbeheer</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        :root { --polblauw: #1d4e89; --grijs: #334155; --bg: #f8fafc; --border: #cbd5e1; --gold: #ffd700; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--grijs); }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 5px solid var(--polblauw); }
+        
+        .foto-groot { 
+            position: relative; width: 100%; height: 600px; 
+            background-image: url('https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg'); 
+            background-size: 100% 100%; background-repeat: no-repeat; border: 1px solid var(--polblauw); 
+        }
+        .foto-zoom { 
+            width: 100%; max-width: 300px; height: 400px; margin: 15px auto; border: 3px solid var(--polblauw);
+            background-image: url('https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg'); background-repeat: no-repeat;
+            border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .vakje { position: absolute; cursor: pointer; border: 1px solid transparent; z-index: 10; }
+        .vakje:hover { border-color: white; background: rgba(255, 255, 255, 0.3); }
+
+        .scherm { display: none; }
+        .actief { display: block; }
+        .nav-tabs { display: flex; gap: 2px; margin-bottom: 25px; background: #e2e8f0; padding: 5px; border-radius: 4px; }
+        .nav-btn { flex: 1; padding: 12px; cursor: pointer; border: none; background: transparent; font-size: 14px; font-weight: 600; text-transform: uppercase; color: var(--grijs); }
+        .nav-btn.active { background: white; color: var(--polblauw); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        
+        .instructie-veld { background: #f1f5f9; padding: 20px; border-radius: 4px; border-left: 4px solid var(--polblauw); margin-bottom: 20px; line-height: 1.6; }
+        .timer-veld { font-family: monospace; font-size: 24px; font-weight: bold; color: var(--polblauw); text-align: right; margin-bottom: 10px; }
+        
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-family: inherit; }
+        button.action-btn { padding: 12px 24px; cursor: pointer; background: var(--polblauw); color: white; border: none; border-radius: 4px; font-weight: bold; width: 100%; text-transform: uppercase; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 14px; }
+        th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
+        th { background: #f8fafc; color: var(--polblauw); }
+        .feedback-box { background: #fffbeb; border: 1px solid var(--gold); padding: 15px; margin-top: 10px; border-radius: 4px; white-space: pre-wrap; font-size: 1.1em; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="login-sectie" style="text-align:center; padding: 40px 0;">
+        <h3>Recherche Informatie Systeem</h3>
+        <input type="text" id="speler-naam" placeholder="Naam Verbalisant" style="max-width:300px; text-align:center;">
+        <br>
+        <button onclick="inloggen()" class="action-btn" style="max-width:300px;">Systeem Toegang</button>
+    </div>
+
+    <div id="hoofd-menu" style="display:none;">
+        <div class="nav-tabs">
+            <button id="btn-d1" class="nav-btn active" onclick="switchDeel(1)">Fase 1: Herkenning</button>
+            <button id="btn-d2" class="nav-btn" onclick="switchDeel(2)">Fase 2: Dossieropbouw</button>
+        </div>
+
+        <div id="scherm-deel1" class="scherm actief">
+            <div id="d1-start">
+                <div class="instructie-veld"><strong>Protocol Fase 1:</strong> Identificeer de juiste persoon op basis van het signalement.</div>
+                <button onclick="startDeel1()" class="action-btn">Start Identificatie</button>
+            </div>
+            <div id="d1-spel" style="display:none;">
+                <div class="timer-veld" id="d1-timer">0.00s</div>
+                <div id="d1-opdracht" class="feedback-box"></div>
+                <div class="foto-groot" id="pd-foto-d1"></div>
+            </div>
+        </div>
+
+        <div id="scherm-deel2" class="scherm">
+            <div class="instructie-veld"><strong>Protocol Fase 2:</strong> Noteer het signalement (kleine letters, puntkomma tussen items, eindig met punt).</div>
+            <div id="zoom-box" class="foto-zoom"></div>
+            <textarea id="d2-tekst" placeholder="man; atletisch postuur; ...;"></textarea>
+            <button onclick="opslaanDeel2()" class="action-btn">Verstuur naar Live Dossier</button>
+            <table>
+                <thead><tr><th>Verbalisant</th><th>Signalement</th><th>Validatie</th></tr></thead>
+                <tbody id="dossier-lijst"></tbody>
+            </table>
+        </div>
+
+        <div id="scherm-check-collega" class="scherm">
+            <button onclick="switchDeel(2)" style="background:#64748b; margin-bottom:10px;" class="action-btn">Terug naar Dossier</button>
+            <div class="instructie-veld">
+                <strong>Validatie Signalement van: <span id="collega-naam"></span></strong>
+                <div id="collega-tekst" class="feedback-box"></div>
+            </div>
+            <div class="foto-groot" id="pd-foto-check"></div>
+        </div>
+
+        <div style="margin-top:50px; text-align:center;">
+            <button onclick="wisDossier()" style="background:#ef4444; color:white; border:none; padding:8px 15px; cursor:pointer; border-radius:4px; font-size:12px;">WIS DOSSIER</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOo2LzR1IBnsiBR2SCwPJABtaRv0tpKQ4",
+        authDomain: "speeltuin-recherche.firebaseapp.com",
+        databaseURL: "https://speeltuin-recherche-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "speeltuin-recherche",
+        appId: "1:499912834123:web:3c84cbf4d5eb13131961ce"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let spelerNaam = "", d1StartTime, d1Interval, d1CorrectId, d2TargetIndex = 0;
+
     const personen = [
         {id: 0, x: 7, y: 38, w: 9, h: 42, zPos: "8% 45%", zSize: "1000%", vast: "man; atletisch postuur; kort donker haar.", veranderlijk: "oranje hoodie; donkere broek; zwarte sneakers."},
         {id: 1, x: 19, y: 40, w: 9, h: 48, zPos: "22% 48%", zSize: "900%", vast: "man; gemiddelde lengte; kort blond haar.", veranderlijk: "politie-uniform; operationele uitrusting aan koppel."},
@@ -12,36 +122,87 @@
         {id: 9, x: 51, y: 56, w: 15, h: 32, zPos: "58% 70%", zSize: "750%", vast: "persoon gehurkt bij bewijsmateriaal.", veranderlijk: "wit tyvek-pak; blauwe latex handschoenen; wit haarkapje."}
     ];
 
+    function inloggen() {
+        spelerNaam = document.getElementById('speler-naam').value.trim();
+        if(!spelerNaam) return;
+        document.getElementById('login-sectie').style.display = "none";
+        document.getElementById('hoofd-menu').style.display = "block";
+        prepDeel2();
+    }
+
+    function switchDeel(nr) {
+        document.querySelectorAll('.scherm').forEach(s => s.style.display = "none");
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        if(nr === 1) { document.getElementById('scherm-deel1').style.display = "block"; document.getElementById('btn-d1').classList.add('active'); clearInterval(d1Interval); }
+        if(nr === 2) { document.getElementById('scherm-deel2').style.display = "block"; document.getElementById('btn-d2').classList.add('active'); }
+    }
+
     function startDeel1() {
         document.getElementById('d1-start').style.display = "none";
         document.getElementById('d1-spel').style.display = "block";
-        
         const p = personen[Math.floor(Math.random() * personen.length)];
         d1CorrectId = p.id;
-
-        // Formatteer de tekst: items onder elkaar, puntkomma's splitsen
-        const vastLijst = p.vast.split('; ').join(';<br>');
-        const veranderlijkLijst = p.veranderlijk.split('; ').join(';<br>');
-
-        document.getElementById('d1-opdracht').innerHTML = `
-            <div style="font-size: 1.1em; line-height: 1.4;">
-                ${vastLijst}<br>
-                ${veranderlijkLijst}
-            </div>`;
-        
+        const vL = p.vast.split('; ').join(';<br>');
+        const rL = p.veranderlijk.split('; ').join(';<br>');
+        document.getElementById('d1-opdracht').innerHTML = `${vL}<br>${rL}`;
         tekenGebieden('pd-foto-d1', (id) => {
-            if(id === d1CorrectId) { 
-                clearInterval(d1Interval); 
-                alert("identificatie succesvol!"); 
-                document.getElementById('d1-start').style.display = "block"; 
-                document.getElementById('d1-spel').style.display = "none"; 
-            } else { 
-                alert("negatief; onjuiste persoon."); 
-            }
+            if(id === d1CorrectId) { clearInterval(d1Interval); alert("identificatie succesvol!"); document.getElementById('d1-start').style.display = "block"; document.getElementById('d1-spel').style.display = "none"; }
+            else alert("negatief; onjuiste persoon.");
         });
-
         d1StartTime = Date.now();
-        d1Interval = setInterval(() => { 
-            document.getElementById('d1-timer').innerText = ((Date.now() - d1StartTime)/1000).toFixed(2) + "s"; 
-        }, 50);
+        d1Interval = setInterval(() => { document.getElementById('d1-timer').innerText = ((Date.now() - d1StartTime)/1000).toFixed(2) + "s"; }, 50);
     }
+
+    function prepDeel2() {
+        d2TargetIndex = Math.floor(Math.random() * personen.length);
+        const zb = document.getElementById('zoom-box');
+        zb.style.backgroundPosition = personen[d2TargetIndex].zPos;
+        zb.style.backgroundSize = personen[d2TargetIndex].zSize;
+        document.getElementById('d2-tekst').value = "";
+    }
+
+    function opslaanDeel2() {
+        const txt = document.getElementById('d2-tekst').value.trim();
+        if(txt.length < 5) return;
+        db.ref('les/studenten/' + spelerNaam).set({ tekst: txt, doel: d2TargetIndex });
+        alert("geregistreerd.");
+        prepDeel2();
+    }
+
+    function bekijkCollega(naam, tekst, doel) {
+        document.querySelectorAll('.scherm').forEach(s => s.style.display = "none");
+        document.getElementById('scherm-check-collega').style.display = "block";
+        document.getElementById('collega-naam').innerText = naam;
+        document.getElementById('collega-tekst').innerHTML = tekst.split('; ').join(';<br>');
+        tekenGebieden('pd-foto-check', (id) => {
+            if(id === personen[doel].id) { alert("validatie succesvol."); switchDeel(2); }
+            else alert("onjuist.");
+        });
+    }
+
+    function wisDossier() { if(confirm("dossier wissen?")) db.ref('les/studenten').remove(); }
+
+    function tekenGebieden(cid, cb) {
+        const pd = document.getElementById(cid);
+        pd.innerHTML = "";
+        personen.forEach(p => {
+            const v = document.createElement('div');
+            v.className = "vakje";
+            v.style.left = p.x + "%"; v.style.top = p.y + "%";
+            v.style.width = p.w + "%"; v.style.height = p.h + "%";
+            v.onclick = () => cb(p.id);
+            pd.appendChild(v);
+        });
+    }
+
+    db.ref('les/studenten').on('value', snap => {
+        const lijst = document.getElementById('dossier-lijst');
+        lijst.innerHTML = "";
+        snap.forEach(s => {
+            const d = s.val();
+            lijst.innerHTML += `<tr><td><strong>${s.key}</strong></td><td>${d.tekst}</td><td><button onclick="bekijkCollega('${s.key}', '${d.tekst}', ${d.doel})">VALIDEER</button></td></tr>`;
+        });
+    });
+</script>
+</body>
+</html>
