@@ -10,25 +10,26 @@
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--grijs); }
         .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 5px solid var(--polblauw); }
         
-        /* Foto container */
+        /* Foto container - aangepast voor lokale bestandsnaam */
         .foto-container { 
             position: relative; 
             width: 100%; 
             height: 600px; 
             border: 2px solid var(--polblauw); 
-            background: #eee;
+            background: #cbd5e1;
             overflow: hidden;
         }
         .foto-img { 
             width: 100%; 
             height: 100%; 
             display: block;
-            object-fit: fill; /* Zorgt dat de coördinaten kloppen */
+            object-fit: fill; 
         }
         
         .foto-zoom { 
             width: 100%; max-width: 300px; height: 400px; margin: 15px auto; border: 3px solid var(--polblauw);
-            background-image: url('https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg'); 
+            /* Zorg dat deze naam exact matcht met je bestand */
+            background-image: url('Q2PVaangifte les 4plaatsdelict.png'); 
             background-repeat: no-repeat;
             border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
@@ -45,7 +46,7 @@
         .instructie-veld { background: #f1f5f9; padding: 20px; border-radius: 4px; border-left: 4px solid var(--polblauw); margin-bottom: 20px; }
         .timer-veld { font-family: monospace; font-size: 24px; font-weight: bold; color: var(--polblauw); text-align: right; }
         
-        textarea { width: 100%; height: 120px; padding: 12px; border: 1px solid var(--border); border-radius: 4px; margin: 10px 0; }
+        textarea { width: 100%; height: 120px; padding: 12px; border: 1px solid var(--border); border-radius: 4px; margin: 10px 0; font-family: inherit; }
         button.action-btn { padding: 12px 24px; cursor: pointer; background: var(--polblauw); color: white; border: none; border-radius: 4px; font-weight: bold; width: 100%; text-transform: uppercase; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 25px; }
@@ -64,20 +65,20 @@
 
     <div id="hoofd-menu" style="display:none;">
         <div class="nav-tabs">
-            <button id="btn-d1" class="nav-btn active" onclick="switchDeel(1)">Fase 1</button>
-            <button id="btn-d2" class="nav-btn" onclick="switchDeel(2)">Fase 2</button>
+            <button id="btn-d1" class="nav-btn active" onclick="switchDeel(1)">Fase 1: Herkenning</button>
+            <button id="btn-d2" class="nav-btn" onclick="switchDeel(2)">Fase 2: Dossieropbouw</button>
         </div>
 
         <div id="scherm-deel1" class="scherm actief">
             <div id="d1-start">
-                <button onclick="startDeel1()" class="action-btn">Start Identificatie</button>
+                <button onclick="startDeel1()" class="action-btn">Start Identificatieprocedure</button>
             </div>
             <div id="d1-spel" style="display:none;">
                 <div class="timer-veld" id="d1-timer">0.00s</div>
                 <div id="d1-opdracht" class="feedback-box"></div>
-                <div class="foto-container" id="pd-foto-d1">
-                    <img src="https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg" class="foto-img">
-                    <div id="vakjes-overlay-d1"></div>
+                <div class="foto-container">
+                    <img src="Q2PVaangifte les 4plaatsdelict.png" class="foto-img" alt="Plaats Delict">
+                    <div id="vakjes-overlay-d1" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
                 </div>
             </div>
         </div>
@@ -85,24 +86,24 @@
         <div id="scherm-deel2" class="scherm">
             <div id="zoom-box" class="foto-zoom"></div>
             <textarea id="d2-tekst" placeholder="man; atletisch postuur; ...;"></textarea>
-            <button onclick="opslaanDeel2()" class="action-btn">Verstuur Signalement</button>
+            <button onclick="opslaanDeel2()" class="action-btn">Verstuur naar Live Dossier</button>
             <table>
-                <thead><tr><th>Naam</th><th>Signalement</th><th>Actie</th></tr></thead>
+                <thead><tr><th>Verbalisant</th><th>Signalement</th><th>Validatie</th></tr></thead>
                 <tbody id="dossier-lijst"></tbody>
             </table>
         </div>
 
         <div id="scherm-check-collega" class="scherm">
-            <button onclick="switchDeel(2)" class="action-btn" style="background:gray; margin-bottom:10px;">Terug</button>
+            <button onclick="switchDeel(2)" class="action-btn" style="background:gray; margin-bottom:10px;">Terug naar Overzicht</button>
             <div id="collega-tekst" class="feedback-box"></div>
-            <div class="foto-container" id="pd-foto-check">
-                <img src="https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg" class="foto-img">
-                <div id="vakjes-overlay-check"></div>
+            <div class="foto-container">
+                <img src="Q2PVaangifte les 4plaatsdelict.png" class="foto-img" alt="Plaats Delict">
+                <div id="vakjes-overlay-check" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
             </div>
         </div>
         
         <div style="text-align:center; margin-top:20px;">
-            <button onclick="wisDossier()" style="font-size:10px; color:red; background:none; border:none; cursor:pointer;">Wis Dossier</button>
+            <button onclick="wisDossier()" style="font-size:10px; color:red; background:none; border:none; cursor:pointer;">WIS DATABASE</button>
         </div>
     </div>
 </div>
@@ -156,11 +157,11 @@
         d1CorrectId = p.id;
         document.getElementById('d1-opdracht').innerHTML = `${p.vast.split('; ').join(';<br>')}<br>${p.veranderlijk.split('; ').join(';<br>')}`;
         tekenGebieden('vakjes-overlay-d1', (id) => {
-            if(id === d1CorrectId) { clearInterval(d1Interval); alert("Goed!"); switchDeel(1); document.getElementById('d1-start').style.display = "block"; document.getElementById('d1-spel').style.display = "none"; }
-            else alert("Fout.");
+            if(id === d1CorrectId) { clearInterval(d1Interval); alert("identificatie succesvol!"); switchDeel(1); document.getElementById('d1-start').style.display = "block"; document.getElementById('d1-spel').style.display = "none"; }
+            else alert("negatief; onjuiste persoon.");
         });
-        d1StartTime = Date.now();
-        d1Interval = setInterval(() => { document.getElementById('d1-timer').innerText = ((Date.now() - d1StartTime)/1000).toFixed(2) + "s"; }, 50);
+        dStartTime = Date.now();
+        d1Interval = setInterval(() => { document.getElementById('d1-timer').innerText = ((Date.now() - dStartTime)/1000).toFixed(2) + "s"; }, 50);
     }
 
     function prepDeel2() {
@@ -173,20 +174,20 @@
 
     function opslaanDeel2() {
         const txt = document.getElementById('d2-tekst').value.trim();
-        if(txt) { db.ref('les/studenten/' + spelerNaam).set({ tekst: txt, doel: d2TargetIndex }); alert("Opgeslagen."); prepDeel2(); }
+        if(txt) { db.ref('les/studenten/' + spelerNaam).set({ tekst: txt, doel: d2TargetIndex }); alert("geregistreerd."); prepDeel2(); }
     }
 
     function bekijkCollega(naam, tekst, doel) {
         document.querySelectorAll('.scherm').forEach(s => s.style.display = "none");
         document.getElementById('scherm-check-collega').style.display = "block";
-        document.getElementById('collega-tekst').innerHTML = `<strong>Signalement van ${naam}:</strong><br>${tekst.split('; ').join(';<br>')}`;
+        document.getElementById('collega-tekst').innerHTML = `<strong>signalement van ${naam}:</strong><br>${tekst.split('; ').join(';<br>')}`;
         tekenGebieden('vakjes-overlay-check', (id) => {
-            if(id === personen[doel].id) { alert("Correct!"); switchDeel(2); }
-            else alert("Fout.");
+            if(id === personen[doel].id) { alert("validatie succesvol!"); switchDeel(2); }
+            else alert("fout.");
         });
     }
 
-    function wisDossier() { if(confirm("Dossier wissen?")) db.ref('les/studenten').remove(); }
+    function wisDossier() { if(confirm("dossier wissen?")) db.ref('les/studenten').remove(); }
 
     function tekenGebieden(containerId, cb) {
         const div = document.getElementById(containerId);
@@ -206,7 +207,7 @@
         lijst.innerHTML = "";
         snap.forEach(s => {
             const d = s.val();
-            lijst.innerHTML += `<tr><td>${s.key}</td><td>${d.tekst.substring(0,30)}...</td><td><button onclick="bekijkCollega('${s.key}', '${d.tekst}', ${d.doel})">Valideer</button></td></tr>`;
+            lijst.innerHTML += `<tr><td><strong>${s.key}</strong></td><td>${d.tekst.substring(0,30)}...</td><td><button onclick="bekijkCollega('${s.key}', '${d.tekst}', ${d.doel})">Valideer</button></td></tr>`;
         });
     });
 </script>
