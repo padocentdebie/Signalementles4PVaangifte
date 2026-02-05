@@ -6,14 +6,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        :root { --polblauw: #1d4e89; --grijs: #334155; --bg: #f8fafc; --border: #cbd5e1; --gold: #ffd700; }
+        :root { --polblauw: #1d4e89; --grijs: #334155; --bg: #f8fafc; --border: #cbd5e1; --gold: #ffd700; --success: #28a745; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--grijs); }
         .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 5px solid var(--polblauw); }
         
         .foto-groot { 
             position: relative; width: 100%; height: 600px; 
             background-image: url('https://i.ibb.co/LzNfS6p/image-ce2f2a.jpg'); 
-            background-size: cover; background-position: center; border: 1px solid var(--polblauw); 
+            background-size: 100% 100%; background-repeat: no-repeat; border: 1px solid var(--polblauw); 
         }
         .foto-zoom { 
             width: 100%; max-width: 300px; height: 400px; margin: 15px auto; border: 3px solid var(--polblauw);
@@ -22,7 +22,7 @@
         }
         
         .vakje { position: absolute; cursor: pointer; border: 1px solid transparent; z-index: 10; }
-        .vakje:hover { border-color: white; background: rgba(255, 255, 255, 0.2); }
+        .vakje:hover { border-color: white; background: rgba(255, 255, 255, 0.3); }
 
         .scherm { display: none; }
         .actief { display: block; }
@@ -41,7 +41,8 @@
         th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
         th { background: #f8fafc; color: var(--polblauw); }
         
-        .feedback-box { background: #fffbeb; border: 1px solid var(--gold); padding: 10px; margin-top: 10px; border-radius: 4px; white-space: pre-wrap; font-size: 0.9em; }
+        .feedback-box { background: #fffbeb; border: 1px solid var(--gold); padding: 15px; margin-top: 10px; border-radius: 4px; white-space: pre-wrap; font-size: 0.95em; }
+        .admin-controls { margin-top: 50px; padding: 20px; background: #fee2e2; border-radius: 4px; text-align: center; }
     </style>
 </head>
 <body>
@@ -73,10 +74,12 @@
         </div>
 
         <div id="scherm-deel2" class="scherm">
-            <div class="instructie-veld"><strong>Protocol Fase 2:</strong> Noteer het signalement van de getoonde persoon.</div>
+            <div class="instructie-veld"><strong>Protocol Fase 2:</strong> Stel het signalement op van de getoonde persoon (gebruik kleine letters, ; tussen items en eindig met .).</div>
             <div id="zoom-box" class="foto-zoom"></div>
-            <textarea id="d2-tekst" placeholder="VASTE KENMERKEN:&#10;...&#10;&#10;VERANDERLIJKE KENMERKEN:&#10;..."></textarea>
+            <textarea id="d2-tekst" placeholder="vaste kenmerken: ...;&#10;veranderlijke kenmerken: ...;"></textarea>
             <button onclick="opslaanDeel2()" class="action-btn">Verstuur naar Live Dossier</button>
+            
+            <h3>Live Dossieroverzicht</h3>
             <table>
                 <thead><tr><th>Verbalisant</th><th>Signalement</th><th>Validatie</th></tr></thead>
                 <tbody id="dossier-lijst"></tbody>
@@ -90,6 +93,10 @@
                 <div id="collega-tekst" class="feedback-box"></div>
             </div>
             <div class="foto-groot" id="pd-foto-check"></div>
+        </div>
+
+        <div class="admin-controls">
+            <button onclick="wisDossier()" style="background:#ef4444; color:white; border:none; padding:10px; cursor:pointer; border-radius:4px;">⚠️ WIS LIVE DOSSIER VOOR NIEUWE LES</button>
         </div>
     </div>
 </div>
@@ -110,16 +117,16 @@
     let d2TargetIndex = 0;
 
     const personen = [
-        {id: 0, x: 7, y: 38, w: 9, h: 42, zPos: "8% 45%", zSize: "1000%", vast: "Man; atletisch; kort donker haar.", veranderlijk: "Oranje hoodie; donkere broek."},
-        {id: 1, x: 19, y: 40, w: 9, h: 48, zPos: "22% 48%", zSize: "900%", vast: "Man; uniformdienst; kort blond haar.", veranderlijk: "Politie-uniform; koppel met uitrusting."},
-        {id: 2, x: 31, y: 39, w: 8, h: 41, zPos: "34% 45%", zSize: "1000%", vast: "Man; gezet postuur; bruin haar.", veranderlijk: "Donkere jas; camera om de hals."},
-        {id: 3, x: 44, y: 41, w: 7, h: 46, zPos: "47% 48%", zSize: "1000%", vast: "Man; slank; donker kort haar.", veranderlijk: "Groene parka; donkere broek."},
-        {id: 4, x: 55, y: 41, w: 8, h: 45, zPos: "59% 48%", zSize: "1000%", vast: "Man; atletisch; kort donker haar.", veranderlijk: "Politie-uniform; tactisch vest."},
-        {id: 5, x: 62, y: 36, w: 9, h: 44, zPos: "65% 42%", zSize: "900%", vast: "Vrouw; slank; rood lang haar.", veranderlijk: "Zwart jasje; handtas met ruitmotief."},
-        {id: 6, x: 75, y: 40, w: 8, h: 47, zPos: "79% 48%", zSize: "900%", vast: "Man; gedrongen; kort donker haar.", veranderlijk: "Politie-uniform; gele strepen mouw."},
-        {id: 7, x: 84, y: 32, w: 10, h: 58, zPos: "93% 45%", zSize: "800%", vast: "Man; fors; grijs kort haar.", veranderlijk: "Grijs kostuum; telefoon aan oor."},
-        {id: 8, x: 30, y: 56, w: 15, h: 32, zPos: "38% 70%", zSize: "750%", vast: "Persoon knielend op wegdek.", veranderlijk: "Wit Tyvek-pak; blauwe handschoenen."},
-        {id: 9, x: 51, y: 56, w: 15, h: 32, zPos: "58% 70%", zSize: "750%", vast: "Persoon gehurkt bij bewijs.", veranderlijk: "Wit Tyvek-pak; haarkapje."}
+        {id: 0, x: 7, y: 38, w: 9, h: 42, zPos: "8% 45%", zSize: "1000%", vast: "man; atletisch postuur; kort donker haar.", veranderlijk: "oranje hoodie; donkere broek; zwarte sneakers."},
+        {id: 1, x: 19, y: 40, w: 9, h: 48, zPos: "22% 48%", zSize: "900%", vast: "man; gemiddelde lengte; kort blond haar.", veranderlijk: "politie-uniform; operationele uitrusting aan koppel."},
+        {id: 2, x: 31, y: 39, w: 8, h: 41, zPos: "34% 45%", zSize: "1000%", vast: "man; gezet postuur; kort bruin haar.", veranderlijk: "donkere jas; spijkerbroek; camera met lens om hals."},
+        {id: 3, x: 44, y: 41, w: 7, h: 46, zPos: "47% 48%", zSize: "1000%", vast: "man; slank postuur; donker kort haar.", veranderlijk: "olijfgroene parka; donkere broek."},
+        {id: 4, x: 55, y: 41, w: 8, h: 45, zPos: "59% 48%", zSize: "1000%", vast: "man; atletisch; kort donker haar.", veranderlijk: "politie-uniform; tactisch vest; portofoon op schouder."},
+        {id: 5, x: 62, y: 36, w: 9, h: 44, zPos: "65% 42%", zSize: "900%", vast: "vrouw; slank postuur; rood lang haar.", veranderlijk: "zwart kort jasje; witte blouse; handtas met ruitpatroon."},
+        {id: 6, x: 75, y: 40, w: 8, h: 47, zPos: "79% 48%", zSize: "900%", vast: "man; gedrongen postuur; kort donker haar.", veranderlijk: "politie-uniform; gele reflecterende strepen op mouw."},
+        {id: 7, x: 84, y: 32, w: 10, h: 58, zPos: "93% 45%", zSize: "800%", vast: "man; fors postuur; grijs kort haar.", veranderlijk: "grijs zakelijk kostuum; telefoon aan oor."},
+        {id: 8, x: 30, y: 56, w: 15, h: 32, zPos: "38% 70%", zSize: "750%", vast: "persoon knielend op wegdek.", veranderlijk: "wit tyvek-pak; blauwe latex handschoenen."},
+        {id: 9, x: 51, y: 56, w: 15, h: 32, zPos: "58% 70%", zSize: "750%", vast: "persoon gehurkt bij bewijsmateriaal.", veranderlijk: "wit tyvek-pak; blauwe latex handschoenen; wit haarkapje."}
     ];
 
     function inloggen() {
@@ -142,10 +149,10 @@
         document.getElementById('d1-spel').style.display = "block";
         const p = personen[Math.floor(Math.random() * personen.length)];
         d1CorrectId = p.id;
-        document.getElementById('d1-opdracht').innerHTML = `<strong>Vaste kenmerken:</strong> ${p.vast}<br><strong>Veranderlijke kenmerken:</strong> ${p.veranderlijk}`;
+        document.getElementById('d1-opdracht').innerHTML = `<strong>vaste kenmerken:</strong> ${p.vast}<br><strong>veranderlijke kenmerken:</strong> ${p.veranderlijk}`;
         tekenGebieden('pd-foto-d1', (id) => {
-            if(id === d1CorrectId) { clearInterval(d1Interval); alert("Identificatie voltooid!"); document.getElementById('d1-start').style.display = "block"; document.getElementById('d1-spel').style.display = "none"; }
-            else { alert("Foute identificatie!"); }
+            if(id === d1CorrectId) { clearInterval(d1Interval); alert("identificatie succesvol!"); document.getElementById('d1-start').style.display = "block"; document.getElementById('d1-spel').style.display = "none"; }
+            else { alert("negatief; onjuiste persoon."); }
         });
         d1StartTime = Date.now();
         d1Interval = setInterval(() => { document.getElementById('d1-timer').innerText = ((Date.now() - d1StartTime)/1000).toFixed(2) + "s"; }, 50);
@@ -161,9 +168,9 @@
 
     function opslaanDeel2() {
         const txt = document.getElementById('d2-tekst').value.trim();
-        if(txt.length < 15) return;
-        db.ref('les/studenten/' + spelerNaam).set({ tekst: txt, doel: d2TargetIndex, timestamp: new Date().toLocaleTimeString() });
-        alert("Geregistreerd.");
+        if(txt.length < 10) return;
+        db.ref('les/studenten/' + spelerNaam).set({ tekst: txt, doel: d2TargetIndex });
+        alert("geregistreerd.");
         prepDeel2();
     }
 
@@ -173,9 +180,13 @@
         document.getElementById('collega-naam').innerText = naam;
         document.getElementById('collega-tekst').innerText = tekst;
         tekenGebieden('pd-foto-check', (id) => {
-            if(id === personen[doel].id) { alert("Validatie succesvol."); switchDeel(2); }
-            else { alert("Onjuist."); }
+            if(id === personen[doel].id) { alert("validatie succesvol."); switchDeel(2); }
+            else { alert("onjuist."); }
         });
+    }
+
+    function wisDossier() {
+        if(confirm("weet je zeker dat je alle student-inzendingen wilt wissen?")) db.ref('les/studenten').remove();
     }
 
     function tekenGebieden(cid, cb) {
@@ -196,7 +207,7 @@
         lijst.innerHTML = "";
         snap.forEach(s => {
             const d = s.val();
-            lijst.innerHTML += `<tr><td><strong>${s.key}</strong></td><td>${d.tekst}</td><td><button onclick="bekijkCollega('${s.key}', '${d.tekst}', ${d.doel})">Valideer</button></td></tr>`;
+            lijst.innerHTML += `<tr><td><strong>${s.key}</strong></td><td>${d.tekst}</td><td><button onclick="bekijkCollega('${s.key}', '${d.tekst}', ${d.doel})" style="padding:5px 10px; cursor:pointer;">VALIDEER</button></td></tr>`;
         });
     });
 </script>
